@@ -1,0 +1,16 @@
+[input]
+entrypoint = 0x80000400
+rom_file_path = "pal.z64"
+output_func_path = "RecompiledFuncs"
+symbols_file_path = "dump.toml"
+
+manual_funcs = [
+    { vram = 0x80102918, section = ".race", name = "func_race_80102918", size = 0x140 },
+]
+
+[patches]
+
+ignored = [
+    "func_race_80102918",
+    "func_race_80102A58",
+]

@@ -1,0 +1,6 @@
+# Input elf and rom files
+*.elf
+*.z64
+
+# Output C files
+RecompiledFuncs/
