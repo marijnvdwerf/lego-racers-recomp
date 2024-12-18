@@ -12,5 +12,5 @@ manual_funcs = [
 
 ignored = [
     "func_race_80102918",
-    "func_race_80102A58",
+    "func_race_80102A58"
 ]

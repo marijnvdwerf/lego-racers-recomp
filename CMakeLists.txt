@@ -1,5 +1,11 @@
 cmake_minimum_required(VERSION 3.20)
-project(ChameleonTwistJPRecompiled)
+
+if (APPLE) # has to be set before the first project() or enable_language()
+    set(CMAKE_OSX_DEPLOYMENT_TARGET "11.0" CACHE STRING "Minimum OS X deployment version")
+endif()
+
+project(ChameleonTwistJPRecompiled LANGUAGES C CXX)
+
 set(CMAKE_C_STANDARD 17)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -13,6 +19,30 @@ endif()
 # Opt out of constexpr mutex constructor on windows to prevent vcredist issues
 if (WIN32)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_DISABLE_CONSTEXPR_MUTEX_CONSTRUCTOR")
+endif()
+
+if (APPLE)
+    enable_language(OBJC OBJCXX)
+
+    # Check if VULKAN_SDK environment variable is set
+    if(NOT DEFINED ENV{VULKAN_SDK})
+        message(FATAL_ERROR "VULKAN_SDK environment variable is not set.")
+    else()
+        set(VULKAN_SDK $ENV{VULKAN_SDK})
+    endif()
+
+    # Define paths to Vulkan loader and MoltenVK libraries
+    set(VULKAN_LOADER_PATH "${VULKAN_SDK}/lib/libvulkan.dylib")
+    set(MOLTENVK_PATH "${VULKAN_SDK}/lib/libMoltenVK.dylib")
+
+    # Ensure the Vulkan loader and MoltenVK libraries exist
+    if(NOT EXISTS "${VULKAN_LOADER_PATH}")
+        message(FATAL_ERROR "Vulkan loader not found at ${VULKAN_LOADER_PATH}")
+    endif()
+
+    if(NOT EXISTS "${MOLTENVK_PATH}")
+        message(FATAL_ERROR "MoltenVK not found at ${MOLTENVK_PATH}")
+    endif()
 endif()
 
 # Avoid warning about DOWNLOAD_EXTRACT_TIMESTAMP in CMake 3.24:
@@ -151,6 +181,7 @@ endif()
 
 set (SOURCES
     ${CMAKE_SOURCE_DIR}/src/main/main.cpp
+    ${CMAKE_SOURCE_DIR}/src/main/support.cpp
     ${CMAKE_SOURCE_DIR}/src/main/register_overlays.cpp
     ${CMAKE_SOURCE_DIR}/src/main/register_patches.cpp
     ${CMAKE_SOURCE_DIR}/src/main/rt64_render_context.cpp
@@ -176,6 +207,10 @@ set (SOURCES
 
 if (HAS_MM_SHADER_CACHE)
     list(APPEND SOURCES ${CMAKE_CURRENT_BINARY_DIR}/mm_shader_cache.c)
+endif()
+
+if (APPLE)
+    list(APPEND SOURCES ${CMAKE_SOURCE_DIR}/src/main/support_apple.mm)
 endif()
 
 target_include_directories(ChameleonTwistJPRecompiled PRIVATE
@@ -252,12 +287,19 @@ if (WIN32)
     target_sources(ChameleonTwistJPRecompiled PRIVATE ${CMAKE_SOURCE_DIR}/icons/app.rc)
 endif()
 
-if (CMAKE_SYSTEM_NAME MATCHES "Darwin")
+
+if (APPLE)
     find_package(SDL2 REQUIRED)
-    message(STATUS "SDL2_FOUND = ${SDL2_FOUND}")
-    message(STATUS "SDL2_INCLUDE_DIRS = ${SDL2_INCLUDE_DIRS}")
     target_include_directories(ChameleonTwistJPRecompiled PRIVATE ${SDL2_INCLUDE_DIRS})
 
+    set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
+    set(THREADS_PREFER_PTHREAD_FLAG TRUE)
+    find_package(Threads REQUIRED)
+
+    target_link_libraries(ChameleonTwistJPRecompiled PRIVATE ${CMAKE_DL_LIBS} Threads::Threads SDL2::SDL2)
+
+    # Copy required frameworks to bundle
+    target_link_libraries(ChameleonTwistJPRecompiled PRIVATE ${MOLTENVK_PATH} ${VULKAN_LOADER_PATH})
 endif()
   
   
@@ -332,6 +374,11 @@ else()
     if (APPLE)
         # Apple's binary is universal, so it'll work on both x86_64 and arm64
         set (DXC "DYLD_LIBRARY_PATH=${PROJECT_SOURCE_DIR}/lib/rt64/src/contrib/dxc/lib/arm64" "${PROJECT_SOURCE_DIR}/lib/rt64/src/contrib/dxc/bin/arm64/dxc-macos")
+        if(CMAKE_SIZEOF_VOID_P EQUAL 8 AND CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|amd64|AMD64")
+            set(SPIRVCROSS "DYLD_LIBRARY_PATH=${PROJECT_SOURCE_DIR}/lib/rt64/src/contrib/spirv-cross/lib/x64" "${PROJECT_SOURCE_DIR}/lib/rt64//src/contrib/spirv-cross/bin/x64/spirv-cross")
+        else()
+            set(SPIRVCROSS "DYLD_LIBRARY_PATH=${PROJECT_SOURCE_DIR}/lib/rt64/src/contrib/spirv-cross/lib/arm64" "${PROJECT_SOURCE_DIR}/lib/rt64//src/contrib/spirv-cross/bin/x64/spirv-cross")
+        endif()
     else()
         if(CMAKE_SIZEOF_VOID_P EQUAL 8 AND CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|amd64|AMD64")
             set (DXC "LD_LIBRARY_PATH=${PROJECT_SOURCE_DIR}/lib/rt64/src/contrib/dxc/lib/x64" "${PROJECT_SOURCE_DIR}/lib/rt64/src/contrib/dxc/bin/x64/dxc")
