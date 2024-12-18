@@ -4,3 +4,6 @@
 
 # Output C files
 RecompiledFuncs/
+
+# Build output
+build/
