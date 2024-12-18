@@ -1,0 +1,6 @@
+text_offset = 0xE470
+text_size = 0xC60
+text_address = 0x04001080
+rom_file_path = "pal.z64"
+output_file_path = "rsp/aspMain.cpp"
+output_function_name = "aspMain"

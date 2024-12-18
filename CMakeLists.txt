@@ -252,6 +252,15 @@ if (WIN32)
     target_sources(ChameleonTwistJPRecompiled PRIVATE ${CMAKE_SOURCE_DIR}/icons/app.rc)
 endif()
 
+if (CMAKE_SYSTEM_NAME MATCHES "Darwin")
+    find_package(SDL2 REQUIRED)
+    message(STATUS "SDL2_FOUND = ${SDL2_FOUND}")
+    message(STATUS "SDL2_INCLUDE_DIRS = ${SDL2_INCLUDE_DIRS}")
+    target_include_directories(ChameleonTwistJPRecompiled PRIVATE ${SDL2_INCLUDE_DIRS})
+
+endif()
+  
+  
 if (CMAKE_SYSTEM_NAME MATCHES "Linux")
     find_package(SDL2 REQUIRED)
     find_package(X11 REQUIRED)
