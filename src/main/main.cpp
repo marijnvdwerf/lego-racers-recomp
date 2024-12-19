@@ -595,7 +595,7 @@ int main(int argc, char** argv) {
 
 #if defined(__APPLE__)
     const char* resource_directory = zelda64::get_bundle_resource_directory();
-    std::string mapping_file_path = std::string(resource_directory) + "gamecontrollerdb.txt";
+    std::string mapping_file_path = std::string(resource_directory) + "/../gamecontrollerdb.txt";
 #else
     std::string mapping_file_path = "gamecontrollerdb.txt";
 #endif

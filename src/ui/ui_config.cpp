@@ -521,7 +521,7 @@ public:
 	}
 	Rml::ElementDocument* load_document(Rml::Context* context) override {
 #if defined(__APPLE__)
-        const Rml::String asset = "/assets/config_menu.rml";
+        const Rml::String asset = "/../assets/config_menu.rml";
         return context->LoadDocument(zelda64::get_bundle_resource_directory() + asset);
 #endif
         return context->LoadDocument("assets/config_menu.rml");
