@@ -316,12 +316,12 @@ void reset_audio(uint32_t output_freq) {
 }
 
 //extern RspUcodeFunc njpgdspMain;
-extern RspUcodeFunc aspMain;
+extern RspUcodeFunc n_aspMain;
 
 RspUcodeFunc* get_rsp_microcode(const OSTask* task) {
     switch (task->t.type) {
     case M_AUDTASK:
-        return aspMain;
+        return n_aspMain;
 
     case M_NJPEGTASK:
         //return njpgdspMain;
